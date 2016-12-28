@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+-->
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+    <head>
+        <title>TODO supply a title</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+        <script src="static/js/chart_js/Chart.bundle.min.js"></script>
+        <script
+            src="https://code.jquery.com/jquery-3.1.1.min.js"
+        crossorigin="anonymous"></script>
+    </head>
+    <body>
+        <div>TODO write content</div>
+        <div style="width:75%;">
+            <canvas id="myChart"></canvas>
+        </div>
+        <script>
+            $.getJSON("api/diagram/data", function (data) {
+                var tempMeasured;
+                var tempSet;
+                var power;
+                var time;
+                for (var property in data) {
+                    if (data.hasOwnProperty(property)) {
+                        if (property === "Naměřená teplota")
+                            tempMeasured = data[property];
+                        else if (property === "Nastavená teplota")
+                            tempSet = data[property];
+                        else if (property === "Výkon")
+                            power = data[property];
+                        else if (property === "Čas")
+                            time = data[property];
+                    }
+                }
+
+                var data = {
+                    labels: time,
+                    datasets: [
+                        {
+                            type: 'line',
+                            label: "Naměřená teplota",
+                            borderColor: 'rgba(0, 255, 0, 1)',
+                            backgroundColor: 'rgba(0, 0, 0, 0)',
+                            data: tempMeasured
+                        },
+                        {
+                            type: 'line',
+                            label: "Nastavená teplota",
+                            borderColor: 'rgba(0, 0, 255, 1)',
+                            backgroundColor: 'rgba(0, 0, 0, 0)',
+                            data: tempSet
+                        },
+                        {
+                            type: "line",
+                            label: "Výkon",
+                            borderColor: 'rgba(255, 0, 0, 1)',
+                            backgroundColor: 'rgba(255, 0, 0, 0.3)',
+                            data: power,
+                        }
+                    ]
+                };
+
+                var ctx = document.getElementById("myChart");
+                var myLineChart = new Chart(ctx, {
+                    type: "bar",
+                    data: data,
+                    options: {
+                        scales: {
+                            xAxes: [{
+                                    type: 'time',
+                                    time: {
+                                        unit: 'hour',
+                                        displayFormats: {
+                                            hour: 'HH:mm'
+                                        }
+                                    }
+                                }]
+                        }
+                    }
+                });
+
+            });
+
+        </script>
+    </body>
+</html>

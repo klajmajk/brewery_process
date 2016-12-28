@@ -1,0 +1,14 @@
+{
+    "elements": {},
+    "attributes": {
+        "cam-script": {
+            "context": "script"
+        },
+        "cam-variable-type": {
+            "context": "input"
+        },
+        "cam-variable-name": {
+            "context": "input"
+        }
+    }
+}
