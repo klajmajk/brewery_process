@@ -39,6 +39,12 @@ public class Record implements Serializable{
     public void setEntries(Set<Entry> entries) {
         this.entries = entries;
     }
+
+    @Override
+    public String toString() {
+        return "Record{" + "date=" + date + ", entries=" + entries + '}';
+    }
+    
     
     
     

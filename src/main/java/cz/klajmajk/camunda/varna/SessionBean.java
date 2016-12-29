@@ -12,14 +12,19 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.context.SessionScoped;
 import javax.inject.Inject;
 import org.camunda.bpm.engine.cdi.BusinessProcess;
+import org.camunda.bpm.engine.cdi.annotation.BusinessProcessScoped;
 
 /**
  * @author Adam
  */
 @Named
+@ApplicationScoped
 public class SessionBean implements Serializable {
 
     @Inject
@@ -29,25 +34,28 @@ public class SessionBean implements Serializable {
     private VarnaRESTController wsConsumer;
 
     private List<Record> records;
-
     private Record current;
+
 
     private Date stageStart;
 
-    public void persit() {
+    public void persist() {
+        Logger.getLogger(SessionBean.class.getName()).log(Level.INFO, "persist called");
         if (records == null) {
             records = (List<Record>) businessProcess.getVariable("records");
             if (records == null) {
                 records = new ArrayList<Record>();
             }
         }
-        records.add(current);
+        records.add(businessProcess.getVariable("current"));
         businessProcess.setVariable("records", records);
     }
 
     public void refresh() {
-
         current = getRecordFromREST();
+        Logger.getLogger(SessionBean.class.getName()).log(Level.INFO, "refresh called setting current to: "+current);
+        businessProcess.setVariable("current", current);
+
     }
 
     private Record getRecordFromREST() {
@@ -60,7 +68,8 @@ public class SessionBean implements Serializable {
     }
 
     public Record getCurrent() {
-        return current;
+        if(current != null) return current;
+        return businessProcess.getVariable("current");
     }
 
     public Date getStageStart() {

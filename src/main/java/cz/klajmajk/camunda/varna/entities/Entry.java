@@ -29,6 +29,13 @@ public class Entry<T> implements Serializable{
         return value;
     }
 
+    @Override
+    public String toString() {
+        return "Entry{" + "type=" + type + ", value=" + value + '}';
+    }
+    
+    
+
     
     
 }

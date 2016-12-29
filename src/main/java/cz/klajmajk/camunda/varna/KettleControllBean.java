@@ -10,6 +10,8 @@ import cz.klajmajk.camunda.varna.entities.Record;
 import cz.klajmajk.camunda.varna.ws.VarnaRESTController;
 import java.io.Serializable;
 import java.util.Date;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -28,20 +30,25 @@ public class KettleControllBean implements Serializable {
     private VarnaRESTController varnaRest;
 
     private int getPower() {
-        int power = 0;
-        for (Entry entry : sessionBean.getCurrent().getEntries()) {
-            if ("power1".equals(entry.getType())) {
-                power = (Integer) entry.getValue();
+        int power = -1;
+        if (sessionBean.getCurrent() != null) {
+            for (Entry entry : sessionBean.getCurrent().getEntries()) {
+                if ("power1".equals(entry.getType())) {
+                    power = (Integer) entry.getValue();
+                }
             }
+
         }
         return power;
     }
 
     private float getTempMeasured() {
-        float tempMeasured = 0;
-        for (Entry entry : sessionBean.getCurrent().getEntries()) {
-            if ("temp1".equals(entry.getType())) {
-                tempMeasured = (Integer) entry.getValue();
+        float tempMeasured = -1;
+        if (sessionBean.getCurrent() != null) {
+            for (Entry entry : sessionBean.getCurrent().getEntries()) {
+                if ("temp1".equals(entry.getType())) {
+                    tempMeasured = (Float) entry.getValue();
+                }
             }
         }
         return tempMeasured;
@@ -67,10 +74,13 @@ public class KettleControllBean implements Serializable {
     }
 
     public boolean heatingPhaseFinished(float tempHold, float delta) {
+        Logger.getLogger(KettleControllBean.class.getName()).log(Level.INFO, tempHold + ", " + delta + ", " + getTempMeasured());
+        Logger.getLogger(KettleControllBean.class.getName()).log(Level.INFO, "Return" + ((tempHold - delta < getTempMeasured()) && (tempHold + delta > getTempMeasured())));
         return (tempHold - delta < getTempMeasured()) && (tempHold + delta > getTempMeasured());
     }
 
     public boolean shouldHeatMore(float tempHold, float delta) {
+        Logger.getLogger(KettleControllBean.class.getName()).log(Level.INFO, "Testing if should heat more");
         return (tempHold - delta > getTempMeasured());
     }
 
@@ -79,6 +89,7 @@ public class KettleControllBean implements Serializable {
     }
 
     public boolean shouldHeatFaster(float tempHold, float delta) {
+        Logger.getLogger(KettleControllBean.class.getName()).log(Level.INFO, "Testing if should heat faster");
 //        float temp1 = -1;
 //        float temp2 = -1;
 //        int tempDiff = 0;
