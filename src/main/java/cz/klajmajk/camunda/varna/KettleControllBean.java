@@ -6,7 +6,6 @@
 package cz.klajmajk.camunda.varna;
 
 import cz.klajmajk.camunda.varna.entities.Entry;
-import cz.klajmajk.camunda.varna.entities.Record;
 import cz.klajmajk.camunda.varna.ws.VarnaRESTController;
 import java.io.Serializable;
 import java.util.Date;
@@ -15,6 +14,7 @@ import java.util.logging.Logger;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
 import javax.inject.Named;
+import org.camunda.bpm.engine.cdi.BusinessProcess;
 
 /**
  *
@@ -23,16 +23,19 @@ import javax.inject.Named;
 @Named
 @Stateless
 public class KettleControllBean implements Serializable {
-
+    @Inject
+    private BusinessProcess businessProcess;
     @Inject
     private SessionBean sessionBean;
+    @Inject
+    private SchedulerBean schedulerBean;
     @Inject
     private VarnaRESTController varnaRest;
 
     private int getPower() {
         int power = -1;
-        if (sessionBean.getCurrent() != null) {
-            for (Entry entry : sessionBean.getCurrent().getEntries()) {
+        if (schedulerBean.getCurrent() != null) {
+            for (Entry entry : schedulerBean.getCurrent().getEntries()) {
                 if ("power1".equals(entry.getType())) {
                     power = (Integer) entry.getValue();
                 }
@@ -44,8 +47,8 @@ public class KettleControllBean implements Serializable {
 
     private float getTempMeasured() {
         float tempMeasured = -1;
-        if (sessionBean.getCurrent() != null) {
-            for (Entry entry : sessionBean.getCurrent().getEntries()) {
+        if (schedulerBean.getCurrent() != null) {
+            for (Entry entry : schedulerBean.getCurrent().getEntries()) {
                 if ("temp1".equals(entry.getType())) {
                     tempMeasured = (Float) entry.getValue();
                 }
@@ -57,7 +60,7 @@ public class KettleControllBean implements Serializable {
     public void powerUp() throws Exception {
         int power = getPower();
         if (power + 10 <= 100) {
-            varnaRest.setPower(power + 10);
+            setPowerTo(power + 10);
         }
 
     }
@@ -65,17 +68,16 @@ public class KettleControllBean implements Serializable {
     public void powerDown() throws Exception {
         int power = getPower();
         if (power - 10 >= 0) {
-            varnaRest.setPower(power - 10);
+            setPowerTo(power - 10);
         }
     }
 
     public void setPowerTo(int power) throws Exception {
+        Logger.getLogger(KettleControllBean.class.getName()).log(Level.INFO, "Setting power to "+power);
         varnaRest.setPower(power);
     }
 
     public boolean heatingPhaseFinished(float tempHold, float delta) {
-        Logger.getLogger(KettleControllBean.class.getName()).log(Level.INFO, tempHold + ", " + delta + ", " + getTempMeasured());
-        Logger.getLogger(KettleControllBean.class.getName()).log(Level.INFO, "Return" + ((tempHold - delta < getTempMeasured()) && (tempHold + delta > getTempMeasured())));
         return (tempHold - delta < getTempMeasured()) && (tempHold + delta > getTempMeasured());
     }
 
@@ -108,6 +110,10 @@ public class KettleControllBean implements Serializable {
 
     public void setupNewStage(int power) throws Exception {
         setPowerTo(power);
-        sessionBean.setStageStart(new Date());
+    }
+    public void setupStageHold(int power) throws Exception {
+        Logger.getLogger(KettleControllBean.class.getName()).log(Level.INFO, "Setting up hold");
+        setPowerTo(power);
+        businessProcess.setVariable("stageStartDate", new Date());
     }
 }

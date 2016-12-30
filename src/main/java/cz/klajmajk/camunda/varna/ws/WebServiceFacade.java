@@ -5,13 +5,12 @@
  */
 package cz.klajmajk.camunda.varna.ws;
 
+import cz.klajmajk.camunda.varna.SchedulerBean;
 import cz.klajmajk.camunda.varna.SessionBean;
 import cz.klajmajk.camunda.varna.entities.Entry;
 import cz.klajmajk.camunda.varna.entities.Record;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
@@ -21,7 +20,9 @@ import javax.inject.Named;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
+import org.camunda.bpm.engine.impl.util.json.JSONObject;
 
 /**
  *
@@ -37,10 +38,14 @@ public class WebServiceFacade {
     @Inject
     private SessionBean sessionBean;
 
+    @Inject
+    private SchedulerBean schedulerBean;
+
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("data/")
-    public HashMap<String, List<Object>> getDiagramData() {
+    public HashMap<String, List<Object>> getDiagramData(@QueryParam("procInstId") String procInstId) {
+        schedulerBean.touch(procInstId);
         HashMap toReturn = new HashMap<String, List<Object>>();
 //        List list = new ArrayList();
 //        List<String> timeList = new ArrayList();
@@ -56,10 +61,31 @@ public class WebServiceFacade {
 //        list.add(1.14);
 //        list.add(15.12);
 //        toReturn.put("Nastavená teplota", list);
-        toReturn.put("Naměřená teplota", getTempMeasuredList(sessionBean.getRecords()));
-        toReturn.put("Výkon", getPowerList(sessionBean.getRecords()));
-        toReturn.put("Čas", getDates(sessionBean.getRecords()));
+        toReturn.put("Naměřená teplota", getTempMeasuredList(schedulerBean.getRecords(procInstId)));
+        toReturn.put("Výkon", getPowerList(schedulerBean.getRecords(procInstId)));
+        toReturn.put("Čas", getDates(schedulerBean.getRecords(procInstId)));
         return toReturn;
+    }
+
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("current/")
+    public String getCurrent(@QueryParam("procInstId") String procInstId) {
+        schedulerBean.touch(procInstId);
+        Record current = schedulerBean.getCurrent();
+        if (current != null) {
+            Object o = sessionBean.getSubProcessVariable(procInstId, "time");
+            long time = (o != null ? (long) o : -1);
+            String jsonString = new JSONObject()
+                    .put("temp1", getEntryByType(current.getEntries(), "temp1"))
+                    .put("power1", getEntryByType(current.getEntries(), "power1"))
+                    .put("stage", sessionBean.getSubProcessStage(procInstId))
+                    .put("stageStart", (sessionBean.getStageStart(procInstId) != null ? df.format(sessionBean.getStageStart(procInstId)) : "null"))
+                    .put("time", time)
+                    .toString();
+            return jsonString;
+        }
+        return null;
     }
 
     public List<Object> getTempMeasuredList(List<Record> records) {

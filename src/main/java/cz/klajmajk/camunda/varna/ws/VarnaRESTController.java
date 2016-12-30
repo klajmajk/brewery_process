@@ -34,8 +34,6 @@ public class VarnaRESTController implements Serializable {
         Client client = ClientBuilder.newClient();
         WebTarget target = client.target("http://localhost/varna");
         JsonObject response = target.request(MediaType.APPLICATION_JSON).get(JsonObject.class); 
-        
-        Logger.getLogger(VarnaRESTController.class.getName()).log(Level.INFO, "getting current state");
         Set<Entry> entries = new HashSet<>();
         entries.add(new Entry("temp1", response.getJsonNumber("temp1").bigDecimalValue().floatValue()));
         entries.add(new Entry("temp2", response.getJsonNumber("temp2").bigDecimalValue().floatValue()));

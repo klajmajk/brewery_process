@@ -14,74 +14,71 @@ import java.util.Date;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.context.SessionScoped;
+import javax.annotation.Resource;
+import javax.ejb.Singleton;
+import javax.ejb.TransactionManagement;
+import javax.ejb.TransactionManagementType;
 import javax.inject.Inject;
-import org.camunda.bpm.engine.cdi.BusinessProcess;
-import org.camunda.bpm.engine.cdi.annotation.BusinessProcessScoped;
+import javax.transaction.UserTransaction;
+import org.camunda.bpm.engine.RuntimeService;
+import org.camunda.bpm.engine.runtime.ProcessInstance;
+import org.camunda.bpm.engine.runtime.VariableInstance;
 
 /**
  * @author Adam
  */
 @Named
-@ApplicationScoped
+@Singleton
 public class SessionBean implements Serializable {
 
     @Inject
-    private BusinessProcess businessProcess;
+    private RuntimeService runtimeService;
 
-    @Inject
-    private VarnaRESTController wsConsumer;
-
-    private List<Record> records;
-    private Record current;
-
-
-    private Date stageStart;
-
-    public void persist() {
-        Logger.getLogger(SessionBean.class.getName()).log(Level.INFO, "persist called");
-        if (records == null) {
-            records = (List<Record>) businessProcess.getVariable("records");
-            if (records == null) {
-                records = new ArrayList<Record>();
+    public String getSubprocessInstanceId(String processInstanceId) {
+        if (processInstanceId != null) {
+            ProcessInstance subprocessInstance = runtimeService.createProcessInstanceQuery().superProcessInstanceId(processInstanceId).singleResult();
+            if (subprocessInstance != null) {
+                return subprocessInstance.getProcessInstanceId();
             }
         }
-        records.add(businessProcess.getVariable("current"));
-        businessProcess.setVariable("records", records);
+        return null;
     }
 
-    public void refresh() {
-        current = getRecordFromREST();
-        Logger.getLogger(SessionBean.class.getName()).log(Level.INFO, "refresh called setting current to: "+current);
-        businessProcess.setVariable("current", current);
-
+    public String getSubProcessStage(String processInstanceId) {
+        String subProcessId = getSubprocessInstanceId(processInstanceId);
+        if (subProcessId != null) {
+            VariableInstance vi = runtimeService.createVariableInstanceQuery().processInstanceIdIn(subProcessId).variableName("stage").singleResult();
+            if (vi != null) {
+                return (vi.getValue() != null ? vi.getValue().toString() : "none");
+            }
+        }
+        return "none";
     }
 
-    private Record getRecordFromREST() {
-//        Set<Entry> entries = new HashSet();
-//        entries.add(new Entry("tempMeasured", (new Random().nextFloat()) * 40));
-//        entries.add(new Entry("tempSet", (new Random().nextFloat()) * 40));
-//        entries.add(new Entry("power", (new Random().nextInt(11)) * 10));
-
-        return wsConsumer.getCurrentState();
+    public Object getSubProcessVariable(String processInstanceId, String name) {
+        String subProcessId = getSubprocessInstanceId(processInstanceId);
+        if (subProcessId != null) {
+            VariableInstance vi = runtimeService.createVariableInstanceQuery().processInstanceIdIn(subProcessId).variableName(name).singleResult();
+            if (vi != null) {
+                return vi.getValue();
+            }
+        }
+        return null;
     }
 
-    public Record getCurrent() {
-        if(current != null) return current;
-        return businessProcess.getVariable("current");
+    public Record getSuperProcessCurrent(String processInstanceId) {
+        ProcessInstance subprocessInstance = runtimeService.createProcessInstanceQuery().subProcessInstanceId(processInstanceId).singleResult();
+        if (subprocessInstance != null) {
+            VariableInstance vi = runtimeService.createVariableInstanceQuery().processInstanceIdIn(subprocessInstance.getId()).variableName("current").singleResult();
+            if (vi != null) {
+                return (Record) vi.getValue();
+            }
+        }
+        return null;
     }
 
-    public Date getStageStart() {
-        return stageStart;
-    }
-
-    public void setStageStart(Date stageStart) {
-        this.stageStart = stageStart;
-    }
-
-    public List<Record> getRecords() {
-        return records;
+    public Date getStageStart(String processInstanceId) {
+        return (Date) getSubProcessVariable(processInstanceId, "stageStartDate");
     }
 
 }
