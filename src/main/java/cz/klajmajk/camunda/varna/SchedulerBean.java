@@ -59,33 +59,40 @@ public class SchedulerBean {
         this.processInstanceId = processInstanceId;
 
     }
-    
-    public void touch(String processInstanceId){
-        if(this.processInstanceId == null){
+
+    public void touch(String processInstanceId) {
+        if (this.processInstanceId == null) {
             init(processInstanceId);
         }
     }
-    
-    private void clear(){
+
+    private void clear() {
         for (Timer timer : timerService.getTimers()) {
-            if(PERSIST.equals(timer.getInfo()) || REFRESH.equals(timer.getInfo()))
+            if (PERSIST.equals(timer.getInfo()) || REFRESH.equals(timer.getInfo())) {
                 timer.cancel();
+            }
         }
         current = null;
         records = null;
+        processInstanceId = null;
     }
-    
-    public void finish(){
+
+    public void finish() {
         clear();
     }
 
     @Timeout
     public void execute(Timer timer) {
         if (processInstanceId != null) {
-            if (REFRESH.equals(timer.getInfo())) {
-                refresh(processInstanceId);
-            } else if (PERSIST.equals(timer.getInfo())) {
-                persist(processInstanceId);
+            if (runtimeService.createProcessInstanceQuery().processInstanceId(processInstanceId).singleResult() != null) {
+                if (REFRESH.equals(timer.getInfo())) {
+                    refresh(processInstanceId);
+                } else if (PERSIST.equals(timer.getInfo())) {
+                    persist(processInstanceId);
+                }
+            }
+            else{
+                clear();
             }
         }
 
