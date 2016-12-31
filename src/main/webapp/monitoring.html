@@ -88,11 +88,13 @@ and open the template in the editor.
                                                             xAxes: [{
                                                                     type: 'time',
                                                                     time: {
-                                                                        unit: 'hour',
                                                                         tooltipFormat: 'HH:mm',
                                                                         displayFormats: {
-                                                                            hour: 'HH:mm'
-                                                                        }
+                                                                            'millisecond': 'HH:mm',
+                                                                            'second': 'HH:mm:ss',
+                                                                            'minute': 'HH:mm',
+                                                                            'hour': 'HH:mm'
+                                                                        },
                                                                     }
                                                                 }]
                                                         },

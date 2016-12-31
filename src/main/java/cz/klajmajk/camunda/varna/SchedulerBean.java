@@ -74,7 +74,6 @@ public class SchedulerBean {
         }
         current = null;
         records = null;
-        processInstanceId = null;
     }
 
     public void finish() {
@@ -90,8 +89,7 @@ public class SchedulerBean {
                 } else if (PERSIST.equals(timer.getInfo())) {
                     persist(processInstanceId);
                 }
-            }
-            else{
+            } else {
                 clear();
             }
         }
@@ -113,7 +111,10 @@ public class SchedulerBean {
         current = getRecordFromREST();
         Logger.getLogger(SessionBean.class.getName()).log(Level.INFO, "refresh called setting current to: " + current);
 //        runtimeService.setVariable(processInstanceId, "subProcessStage", sessionBean.getSubProcessStage(processInstanceId));
-        runtimeService.setVariable(sessionBean.getSubprocessInstanceId(processInstanceId), "current", current);
+        String subProcessId = sessionBean.getSubprocessInstanceId(processInstanceId);
+        if (subProcessId != null) {
+            runtimeService.setVariable(subProcessId, "current", current);
+        }
 
     }
 
