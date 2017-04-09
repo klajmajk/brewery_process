@@ -29,27 +29,33 @@ import javax.ws.rs.core.Response;
 @Named
 @Singleton
 public class VarnaRESTController implements Serializable {
-    
-    public Record getCurrentState() {
-        Client client = ClientBuilder.newClient();
-        WebTarget target = client.target("http://localhost/varna");
-        JsonObject response = target.request(MediaType.APPLICATION_JSON).get(JsonObject.class); 
-        Set<Entry> entries = new HashSet<>();
-        entries.add(new Entry("temp1", response.getJsonNumber("temp1").bigDecimalValue().floatValue()));
-        entries.add(new Entry("temp2", response.getJsonNumber("temp2").bigDecimalValue().floatValue()));
-        entries.add(new Entry("power1", response.getJsonNumber("power1").intValue()));
-        entries.add(new Entry("power2", response.getJsonNumber("power2").intValue()));
-        return new Record(new Date(), entries);
+
+    public Record getCurrentState(String url) {
+        try {
+            Client client = ClientBuilder.newClient();
+            WebTarget target = client.target(url);
+            JsonObject response = target.request(MediaType.APPLICATION_JSON).get(JsonObject.class);
+            Set<Entry> entries = new HashSet<>();
+            entries.add(new Entry("temp1", response.getJsonNumber("temp1").bigDecimalValue().floatValue()));
+            entries.add(new Entry("temp2", response.getJsonNumber("temp2").bigDecimalValue().floatValue()));
+            entries.add(new Entry("power1", response.getJsonNumber("power1").intValue()));
+            entries.add(new Entry("power2", response.getJsonNumber("power2").intValue()));
+            return new Record(new Date(), entries);
+        }catch (Exception e){
+            Logger.getLogger(VarnaRESTController.class.getName()).log(Level.WARNING, e.getMessage());
+        }
+        return null;
     }
-    
-    public void setPower(int i) throws Exception {
-        
+
+    public void setPower(int i, String url) throws Exception {
+
         Client client = ClientBuilder.newClient();
-        WebTarget target = client.target("http://localhost/varna?power=" + i);
+        
+        WebTarget target = client.target(url+"?power1=" + i * 10);
         Response response = target.request(MediaType.APPLICATION_JSON).get();
         if (response.getStatusInfo().getStatusCode() != 200) {
             throw new Exception("Error while setting power");
         }
-        
+
     }
 }

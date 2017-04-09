@@ -37,15 +37,11 @@ public class SchedulerBean {
     @Inject
     private VarnaRESTController wsConsumer;
 
-    private List<Record> records;
-
-    private Record current;
-
     private String processInstanceId;
 
     @Inject
     private RuntimeService runtimeService;
-
+    
     @Inject
     private SessionBean sessionBean;
 
@@ -54,9 +50,9 @@ public class SchedulerBean {
 
     public void init(String processInstanceId) {
         clear();
-        timerService.createTimer(1000, 1000, REFRESH);
-        timerService.createTimer(10000, 10000, PERSIST);
-        this.processInstanceId = processInstanceId;
+        System.out.println("Inniting timers");
+        timerService.createTimer(1000, 1000, processInstanceId + ";" + REFRESH);
+        timerService.createTimer(10000, 10000, processInstanceId + ";" + PERSIST);
 
     }
 
@@ -68,12 +64,12 @@ public class SchedulerBean {
 
     private void clear() {
         for (Timer timer : timerService.getTimers()) {
-            if (PERSIST.equals(timer.getInfo()) || REFRESH.equals(timer.getInfo())) {
-                timer.cancel();
+            if (timer.getInfo() != null) {
+                if (((String) timer.getInfo()).contains(PERSIST) || ((String) timer.getInfo()).contains(REFRESH)) {
+                    timer.cancel();
+                }
             }
         }
-        current = null;
-        records = null;
     }
 
     public void finish() {
@@ -82,11 +78,13 @@ public class SchedulerBean {
 
     @Timeout
     public void execute(Timer timer) {
-        if (processInstanceId != null) {
+        if (timer.getInfo() != null) {
+            String[] data = ((String) timer.getInfo()).split(";");
+            this.processInstanceId = data[0];
             if (runtimeService.createProcessInstanceQuery().processInstanceId(processInstanceId).singleResult() != null) {
-                if (REFRESH.equals(timer.getInfo())) {
+                if (REFRESH.equals(data[1])) {
                     refresh(processInstanceId);
-                } else if (PERSIST.equals(timer.getInfo())) {
+                } else if (PERSIST.equals(data[1])) {
                     persist(processInstanceId);
                 }
             } else {
@@ -97,44 +95,32 @@ public class SchedulerBean {
     }
 
     public void persist(String processInstanceId) {
-        Logger.getLogger(SessionBean.class.getName()).log(Level.INFO, "persist called");
-        if (records == null) {
-            records = new ArrayList<Record>();
+        
+        if (sessionBean.getCurrent() != null) {
+            sessionBean.getRecords().add(sessionBean.getCurrent());
         }
-        if (current != null) {
-            records.add(current);
-        }
-        runtimeService.setVariable(processInstanceId, "records", records);
+        runtimeService.setVariable(processInstanceId, "records", sessionBean.getRecords());
     }
 
     public void refresh(String processInstanceId) {
-        current = getRecordFromREST();
-        Logger.getLogger(SessionBean.class.getName()).log(Level.INFO, "refresh called setting current to: " + current);
+        Record newRecord = getRecordFromREST(runtimeService.getVariable(processInstanceId, "brewUrl").toString());
+        if (newRecord != null) {
+            sessionBean.setCurrent(newRecord);
 //        runtimeService.setVariable(processInstanceId, "subProcessStage", sessionBean.getSubProcessStage(processInstanceId));
-        String subProcessId = sessionBean.getSubprocessInstanceId(processInstanceId);
-        if (subProcessId != null) {
-            runtimeService.setVariable(subProcessId, "current", current);
+            String subProcessId = sessionBean.getSubprocessInstanceId(processInstanceId);
+            if (subProcessId != null) {
+                runtimeService.setVariable(subProcessId, "current", sessionBean.getCurrent());
+            }
         }
 
     }
 
-    private Record getRecordFromREST() {
+    private Record getRecordFromREST(String url) {
 //        Set<Entry> entries = new HashSet();
 //        entries.add(new Entry("tempMeasured", (new Random().nextFloat()) * 40));
 //        entries.add(new Entry("tempSet", (new Random().nextFloat()) * 40));
 //        entries.add(new Entry("power", (new Random().nextInt(11)) * 10));
 
-        return wsConsumer.getCurrentState();
-    }
-
-    public List<Record> getRecords(String processInstanceId) {
-        if (records != null) {
-            return records;
-        }
-        return new ArrayList<>();
-    }
-
-    public Record getCurrent() {
-        return current;
+        return wsConsumer.getCurrentState(url);
     }
 }

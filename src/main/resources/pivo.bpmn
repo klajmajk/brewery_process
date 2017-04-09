@@ -1,28 +1,29 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" id="Definitions_1" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="1.5.0">
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" id="Definitions_1" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="1.6.0">
   <bpmn:process id="varna" name="Spustit vaření" isExecutable="true">
     <bpmn:startEvent id="StartEvent_1">
       <bpmn:extensionElements>
         <camunda:formData>
           <camunda:formField id="vystirkaTemp" label="Vystírka teplota" type="long" defaultValue="38" />
           <camunda:formField id="vystirkaTime" label="Vystírka délka" type="long" defaultValue="10" />
-          <camunda:formField id="peptonizaceTemp" label="Peptonizační teplota" type="long" defaultValue="38" />
-          <camunda:formField id="peptonizaceTime" label="Peptonizační délka" type="long" defaultValue="10" />
-          <camunda:formField id="nizsiTemp" label="Nižší cukrotvorná teplota" type="long" defaultValue="38" />
-          <camunda:formField id="nizsiTime" label="Nižší cukrotvorná délka" type="long" defaultValue="10" />
-          <camunda:formField id="vyssiTemp" label="Vyšší cukrotvorná teplota" type="long" defaultValue="38" />
-          <camunda:formField id="vyssiTime" label="Vyšší cukrotvorná délka" type="long" defaultValue="10" />
-          <camunda:formField id="odrmutovaniTemp" label="Odrmutování teplota" type="long" defaultValue="38" />
-          <camunda:formField id="odrmutovaniTime" label="Odrmutování délka" type="long" defaultValue="10" />
+          <camunda:formField id="peptonizaceTemp" label="Peptonizační teplota" type="long" defaultValue="52" />
+          <camunda:formField id="peptonizaceTime" label="Peptonizační délka" type="long" defaultValue="35" />
+          <camunda:formField id="nizsiTemp" label="Nižší cukrotvorná teplota" type="long" defaultValue="63" />
+          <camunda:formField id="nizsiTime" label="Nižší cukrotvorná délka" type="long" defaultValue="45" />
+          <camunda:formField id="vyssiTemp" label="Vyšší cukrotvorná teplota" type="long" defaultValue="72" />
+          <camunda:formField id="vyssiTime" label="Vyšší cukrotvorná délka" type="long" defaultValue="45" />
+          <camunda:formField id="odrmutovaniTemp" label="Odrmutování teplota" type="long" defaultValue="78" />
+          <camunda:formField id="odrmutovaniTime" label="Odrmutování délka" type="long" defaultValue="8" />
+          <camunda:formField id="brewUrl" label="URL" type="string" defaultValue="http://varna.local/" />
         </camunda:formData>
       </bpmn:extensionElements>
       <bpmn:outgoing>SequenceFlow_131mma3</bpmn:outgoing>
     </bpmn:startEvent>
     <bpmn:sequenceFlow id="SequenceFlow_131mma3" sourceRef="StartEvent_1" targetRef="Task_1h13esu" />
-    <bpmn:userTask id="Task_168jxci" name="Monitoring průběhu" camunda:formKey="embedded:app:monitoring.html">
+    <bpmn:userTask id="monitoring" name="Monitoring průběhu" camunda:formKey="app:monitoring.xhtml">
       <bpmn:incoming>SequenceFlow_0c0npbm</bpmn:incoming>
     </bpmn:userTask>
-    <bpmn:sequenceFlow id="SequenceFlow_0c0npbm" sourceRef="ExclusiveGateway_1fr3sjy" targetRef="Task_168jxci" />
+    <bpmn:sequenceFlow id="SequenceFlow_0c0npbm" sourceRef="ExclusiveGateway_1fr3sjy" targetRef="monitoring" />
     <bpmn:sequenceFlow id="SequenceFlow_1f9p6z1" sourceRef="ExclusiveGateway_1fr3sjy" targetRef="Task_0zdh7e3" />
     <bpmn:sequenceFlow id="SequenceFlow_1f69k1z" sourceRef="Task_0vmxkmr" targetRef="Task_0gpqad0" />
     <bpmn:sequenceFlow id="SequenceFlow_0izp17x" sourceRef="Task_0gpqad0" targetRef="Task_036wua4" />
@@ -56,6 +57,7 @@
         <camunda:in source="delta" target="delta" />
         <camunda:in source="heatPower" target="heatPower" />
         <camunda:in source="holdPower" target="holdPower" />
+        <camunda:in source="brewUrl" target="brewUrl" />
         <camunda:inputOutput>
           <camunda:inputParameter name="heatPower">5</camunda:inputParameter>
           <camunda:inputParameter name="holdPower">3</camunda:inputParameter>
@@ -64,7 +66,7 @@
       <bpmn:incoming>SequenceFlow_1f9p6z1</bpmn:incoming>
       <bpmn:outgoing>SequenceFlow_17ka53k</bpmn:outgoing>
     </bpmn:callActivity>
-    <bpmn:boundaryEvent id="BoundaryEvent_1fgz3px" name="Konec procesu" attachedToRef="Task_168jxci">
+    <bpmn:boundaryEvent id="BoundaryEvent_1fgz3px" name="Konec procesu" attachedToRef="monitoring">
       <bpmn:outgoing>SequenceFlow_1an3pye</bpmn:outgoing>
       <bpmn:signalEventDefinition signalRef="Signal_1r6ws12" />
     </bpmn:boundaryEvent>
@@ -74,29 +76,77 @@
       <bpmn:outgoing>SequenceFlow_0rmz98f</bpmn:outgoing>
       <bpmn:signalEventDefinition signalRef="Signal_1r6ws12" />
     </bpmn:intermediateThrowEvent>
-    <bpmn:manualTask id="Task_0vmxkmr" name="Peptonizace">
-      <bpmn:incoming>SequenceFlow_17ka53k</bpmn:incoming>
-      <bpmn:outgoing>SequenceFlow_1f69k1z</bpmn:outgoing>
-    </bpmn:manualTask>
-    <bpmn:manualTask id="Task_0gpqad0" name="Nižší cukrotvorná">
-      <bpmn:incoming>SequenceFlow_1f69k1z</bpmn:incoming>
-      <bpmn:outgoing>SequenceFlow_0izp17x</bpmn:outgoing>
-    </bpmn:manualTask>
-    <bpmn:manualTask id="Task_036wua4" name="Vyšší cukrotvorná">
-      <bpmn:incoming>SequenceFlow_0izp17x</bpmn:incoming>
-      <bpmn:outgoing>SequenceFlow_1he43l4</bpmn:outgoing>
-    </bpmn:manualTask>
-    <bpmn:manualTask id="Task_1ow0t0n" name="Odrmutování">
-      <bpmn:incoming>SequenceFlow_1he43l4</bpmn:incoming>
-      <bpmn:outgoing>SequenceFlow_05i0loy</bpmn:outgoing>
-    </bpmn:manualTask>
     <bpmn:sequenceFlow id="SequenceFlow_0cztzos" sourceRef="Task_1h13esu" targetRef="ExclusiveGateway_1fr3sjy" />
-    <bpmn:serviceTask id="Task_1h13esu" name="Nastavení parametrů" camunda:expression="${execution.setVariable(&#39;delta&#39;, 0.5)}${schedulerBean.init(execution.processInstanceId)}">
+    <bpmn:serviceTask id="Task_1h13esu" name="Nastavení parametrů" camunda:expression="${execution.setVariable(&#39;delta&#39;, 0.5)}${schedulerBean.init(execution.processInstanceId)}${execution.setVariable(&#39;running&#39;, true)}">
       <bpmn:incoming>SequenceFlow_131mma3</bpmn:incoming>
       <bpmn:outgoing>SequenceFlow_0cztzos</bpmn:outgoing>
     </bpmn:serviceTask>
     <bpmn:sequenceFlow id="SequenceFlow_1si9a8d" sourceRef="Task_0p4528q" targetRef="IntermediateThrowEvent_0l9s3pc" />
-    <bpmn:serviceTask id="Task_0p4528q" name="Zrušit obnovování" camunda:expression="${schedulerBean.finish()}">
+    <bpmn:callActivity id="Task_0vmxkmr" name="Peptonizace" calledElement="varnaProdleva">
+      <bpmn:extensionElements>
+        <camunda:in source="peptonizaceTemp" target="temp" />
+        <camunda:in source="peptonizaceTime" target="time" />
+        <camunda:in source="delta" target="delta" />
+        <camunda:in source="heatPower" target="heatPower" />
+        <camunda:in source="holdPower" target="holdPower" />
+        <camunda:in source="brewUrl" target="brewUrl" />
+        <camunda:inputOutput>
+          <camunda:inputParameter name="heatPower">6</camunda:inputParameter>
+          <camunda:inputParameter name="holdPower">4</camunda:inputParameter>
+        </camunda:inputOutput>
+      </bpmn:extensionElements>
+      <bpmn:incoming>SequenceFlow_17ka53k</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1f69k1z</bpmn:outgoing>
+    </bpmn:callActivity>
+    <bpmn:callActivity id="Task_0gpqad0" name="Nižší cukrotvorná" calledElement="varnaProdleva">
+      <bpmn:extensionElements>
+        <camunda:in source="nizsiTemp" target="temp" />
+        <camunda:in source="nizsiTime" target="time" />
+        <camunda:in source="delta" target="delta" />
+        <camunda:in source="heatPower" target="heatPower" />
+        <camunda:in source="holdPower" target="holdPower" />
+        <camunda:in source="brewUrl" target="brewUrl" />
+        <camunda:inputOutput>
+          <camunda:inputParameter name="heatPower">7</camunda:inputParameter>
+          <camunda:inputParameter name="holdPower">5</camunda:inputParameter>
+        </camunda:inputOutput>
+      </bpmn:extensionElements>
+      <bpmn:incoming>SequenceFlow_1f69k1z</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_0izp17x</bpmn:outgoing>
+    </bpmn:callActivity>
+    <bpmn:callActivity id="Task_036wua4" name="Vyšší cukrotvorná" calledElement="varnaProdleva">
+      <bpmn:extensionElements>
+        <camunda:in source="vyssiTemp" target="temp" />
+        <camunda:in source="vyssiTime" target="time" />
+        <camunda:in source="delta" target="delta" />
+        <camunda:in source="heatPower" target="heatPower" />
+        <camunda:in source="holdPower" target="holdPower" />
+        <camunda:in source="brewUrl" target="brewUrl" />
+        <camunda:inputOutput>
+          <camunda:inputParameter name="heatPower">8</camunda:inputParameter>
+          <camunda:inputParameter name="holdPower">6</camunda:inputParameter>
+        </camunda:inputOutput>
+      </bpmn:extensionElements>
+      <bpmn:incoming>SequenceFlow_0izp17x</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1he43l4</bpmn:outgoing>
+    </bpmn:callActivity>
+    <bpmn:callActivity id="Task_1ow0t0n" name="Odrmutování" calledElement="varnaProdleva">
+      <bpmn:extensionElements>
+        <camunda:in source="odrmutovaniTemp" target="temp" />
+        <camunda:in source="odrmutovaniTime" target="time" />
+        <camunda:in source="delta" target="delta" />
+        <camunda:in source="heatPower" target="heatPower" />
+        <camunda:in source="holdPower" target="holdPower" />
+        <camunda:in source="brewUrl" target="brewUrl" />
+        <camunda:inputOutput>
+          <camunda:inputParameter name="heatPower">9</camunda:inputParameter>
+          <camunda:inputParameter name="holdPower">7</camunda:inputParameter>
+        </camunda:inputOutput>
+      </bpmn:extensionElements>
+      <bpmn:incoming>SequenceFlow_1he43l4</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_05i0loy</bpmn:outgoing>
+    </bpmn:callActivity>
+    <bpmn:serviceTask id="Task_0p4528q" name="Zrušit obnovování" camunda:expression="${schedulerBean.finish()}${execution.setVariable(&#39;running&#39;, false)}">
       <bpmn:incoming>SequenceFlow_05i0loy</bpmn:incoming>
       <bpmn:outgoing>SequenceFlow_1si9a8d</bpmn:outgoing>
     </bpmn:serviceTask>
@@ -117,7 +167,7 @@
           <dc:Bounds x="379" y="133" width="0" height="0" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNShape id="UserTask_15t4jir_di" bpmnElement="Task_168jxci">
+      <bpmndi:BPMNShape id="UserTask_15t4jir_di" bpmnElement="monitoring">
         <dc:Bounds x="818" y="108" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="SequenceFlow_0c0npbm_di" bpmnElement="SequenceFlow_0c0npbm">
@@ -235,18 +285,6 @@
           <dc:Bounds x="1294" y="282" width="74" height="12" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="ManualTask_1ccw9t9_di" bpmnElement="Task_0vmxkmr">
-        <dc:Bounds x="697" y="224" width="100" height="80" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="ManualTask_1knx68n_di" bpmnElement="Task_0gpqad0">
-        <dc:Bounds x="818" y="224" width="100" height="80" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="ManualTask_08k16y9_di" bpmnElement="Task_036wua4">
-        <dc:Bounds x="943" y="224" width="100" height="80" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="ManualTask_1pmf23s_di" bpmnElement="Task_1ow0t0n">
-        <dc:Bounds x="1067" y="224" width="100" height="80" />
-      </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="SequenceFlow_0cztzos_di" bpmnElement="SequenceFlow_0cztzos">
         <di:waypoint xsi:type="dc:Point" x="499" y="148" />
         <di:waypoint xsi:type="dc:Point" x="542" y="148" />
@@ -264,6 +302,18 @@
           <dc:Bounds x="1298" y="249" width="0" height="0" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="CallActivity_196tafr_di" bpmnElement="Task_0vmxkmr">
+        <dc:Bounds x="697" y="224" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="CallActivity_09nfhwm_di" bpmnElement="Task_0gpqad0">
+        <dc:Bounds x="818" y="224" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="CallActivity_0klem18_di" bpmnElement="Task_036wua4">
+        <dc:Bounds x="943" y="224" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="CallActivity_1ahggvq_di" bpmnElement="Task_1ow0t0n">
+        <dc:Bounds x="1067" y="224" width="100" height="80" />
+      </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="ServiceTask_0fau1x9_di" bpmnElement="Task_0p4528q">
         <dc:Bounds x="1183" y="224" width="100" height="80" />
       </bpmndi:BPMNShape>

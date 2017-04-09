@@ -6,7 +6,6 @@
 package cz.klajmajk.camunda.varna;
 
 import cz.klajmajk.camunda.varna.entities.Record;
-import cz.klajmajk.camunda.varna.ws.VarnaRESTController;
 import javax.inject.Named;
 import java.io.*;
 import java.util.ArrayList;
@@ -14,12 +13,9 @@ import java.util.Date;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.annotation.Resource;
+import javax.annotation.PostConstruct;
 import javax.ejb.Singleton;
-import javax.ejb.TransactionManagement;
-import javax.ejb.TransactionManagementType;
 import javax.inject.Inject;
-import javax.transaction.UserTransaction;
 import org.camunda.bpm.engine.RuntimeService;
 import org.camunda.bpm.engine.runtime.ProcessInstance;
 import org.camunda.bpm.engine.runtime.VariableInstance;
@@ -30,10 +26,38 @@ import org.camunda.bpm.engine.runtime.VariableInstance;
 @Named
 @Singleton
 public class SessionBean implements Serializable {
-
+    
     @Inject
     private RuntimeService runtimeService;
+    
+     private List<Record> records;
 
+    private Record current;
+
+    @PostConstruct
+    public void init() {
+        Logger.getLogger(SessionBean.class.getName()).log(Level.INFO, "New SessionBean");
+    }
+
+    public List<Record> getRecords() {
+        if (records == null) {
+            records = new ArrayList<Record>();
+        }
+        return records;
+    }
+
+    public void setRecords(List<Record> records) {
+        this.records = records;
+    }
+
+    public Record getCurrent() {
+        return current;
+    }
+
+    public void setCurrent(Record current) {
+        this.current = current;
+    }
+    
     public String getSubprocessInstanceId(String processInstanceId) {
         if (processInstanceId != null) {
             ProcessInstance subprocessInstance = runtimeService.createProcessInstanceQuery().superProcessInstanceId(processInstanceId).singleResult();
