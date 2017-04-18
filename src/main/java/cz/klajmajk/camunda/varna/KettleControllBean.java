@@ -82,11 +82,11 @@ public class KettleControllBean implements Serializable {
 
     public boolean shouldHeatMore(float tempHold, float delta) {
         Logger.getLogger(KettleControllBean.class.getName()).log(Level.INFO, "Testing if should heat more");
-        return (tempHold - delta > getTempMeasured());
+        return (tempHold - delta/2 > getTempMeasured());
     }
 
     public boolean shouldHeatLess(float tempHold, float delta) {
-        return (tempHold + delta < getTempMeasured());
+        return (tempHold  < getTempMeasured());
     }
 
     public boolean shouldHeatFaster(float tempToReach, float delta) {
@@ -109,14 +109,14 @@ public class KettleControllBean implements Serializable {
 
     public void setupNewStage(int power){
         try {
-            setPowerTo(power);
+            setPowerTo(power * 10);
         } catch (Exception ex) {
             Logger.getLogger(KettleControllBean.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
     public void setupStageHold(int power) throws Exception {
         Logger.getLogger(KettleControllBean.class.getName()).log(Level.INFO, "Setting up hold");
-        setPowerTo(power);
+        setPowerTo(power * 10);
         businessProcess.setVariable("stageStartDate", new Date());
     }
 }

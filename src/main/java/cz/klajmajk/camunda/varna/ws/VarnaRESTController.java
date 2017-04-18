@@ -51,7 +51,7 @@ public class VarnaRESTController implements Serializable {
 
         Client client = ClientBuilder.newClient();
         
-        WebTarget target = client.target(url+"?power1=" + i * 10);
+        WebTarget target = client.target(url+"?power1=" + i);
         Response response = target.request(MediaType.APPLICATION_JSON).get();
         if (response.getStatusInfo().getStatusCode() != 200) {
             throw new Exception("Error while setting power");
