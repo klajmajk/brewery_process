@@ -26,11 +26,11 @@ import org.camunda.bpm.engine.runtime.VariableInstance;
 @Named
 @Singleton
 public class SessionBean implements Serializable {
-    
+
     @Inject
     private RuntimeService runtimeService;
-    
-     private List<Record> records;
+
+    private List<Record> records;
 
     private Record current;
 
@@ -57,7 +57,7 @@ public class SessionBean implements Serializable {
     public void setCurrent(Record current) {
         this.current = current;
     }
-    
+
     public String getSubprocessInstanceId(String processInstanceId) {
         if (processInstanceId != null) {
             ProcessInstance subprocessInstance = runtimeService.createProcessInstanceQuery().superProcessInstanceId(processInstanceId).singleResult();
@@ -103,6 +103,13 @@ public class SessionBean implements Serializable {
 
     public Date getStageStart(String processInstanceId) {
         return (Date) getSubProcessVariable(processInstanceId, "stageStartDate");
+    }
+
+    public void setSubProcessVariable(String pid, String name, Object o) {
+        String id = getSubprocessInstanceId(pid);
+        if (id != null) {
+            runtimeService.setVariable(id, name, o);
+        }
     }
 
 }

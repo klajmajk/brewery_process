@@ -29,6 +29,7 @@ and open the template in the editor.
     </h:head>
     <h:body>
         <b:container>
+            <f:event type="preRenderView" listener="#{managedBean.setBusinessProcess(businessProcess)}" />
 
             <style>
                 .highlight:not(.djs-connection) .djs-visual > :nth-child(1) {
@@ -61,17 +62,33 @@ and open the template in the editor.
             </script>
 
 
-            <b:poll interval="3000"
-                    update="state"/>
+            <b:poll interval="3000" update="state"/>
+            <h:form id="controll">
+                <b:row>
+                    <b:column medium-screen="6">
+                        <b:panelGrid columns="2" size="xs">
+                            <b:commandButton action="#{managedBean.override(businessProcess.processInstanceId)}" value="Override" disabled="#{managedBean.getStage(businessProcess.processInstanceId) eq 'hold'}" ajax="true" process="@this"/>
+                            <b:selectBooleanCheckbox  value="#{managedBean.controllStir}" caption="Řídit míchání">
+                                <f:ajax event="change" execute="@this" render="@none"/>
+                            </b:selectBooleanCheckbox>
+                        </b:panelGrid>
+                    </b:column>
+                    <b:column medium-screen="6">
+
+                    </b:column>
+                </b:row>
+            </h:form>
             <h:form id="state">
-                <b:panelGrid col-spans="6,6">
+                <b:panelGrid col-spans="6,6" id="info">
                     <h:panelGroup layout="block">
                         <h1>Aktuální stav</h1>
                         <b:panelGrid colSpans="6,6" size="xs">
                             Stav: 
                             <h:outputText value="#{managedBean.getStage(businessProcess.processInstanceId) eq 'hold' ? 'Probíhá prodleva' : 'Přechod na další prodlevu'}"/>
-                            Od začátku prodlevy: 
-                            <h:outputText value="#{managedBean.getStageStart(businessProcess.processInstanceId)}"/>
+                            Od začátku procesu: 
+                            <h:outputText value="#{managedBean.getProcessStart(businessProcess.processInstanceId)}"/>
+                            Do konce prodlevy: 
+                            <h:outputText value="#{managedBean.getStageEnd(businessProcess.processInstanceId)}"/>
                             Prodleva: 
                             <h:outputText value="#{managedBean.curentTaskName}"/>
                             Teplota: 
@@ -104,82 +121,83 @@ and open the template in the editor.
                     </h:panelGroup>
                 </b:panelGrid>
 
-                <div style="width:100%;">
-                    <canvas id="myChart"></canvas>
+                <h:panelGroup layout="block" id="chart">
+                    <div style="width:100%;">
+                        <canvas id="myChart"></canvas>
+                    </div>
 
-                </div>
+                    <script>
 
-                <script>
+                        //debugger;
+                        data = {
+                            labels: #{managedBean.dates},
+                            datasets: [
+                                {
+                                    type: 'line',
+                                    label: "Naměřená teplota",
+                                    lineTension: 0,
+                                    borderColor: 'rgba(0, 255, 0, 1)',
+                                    backgroundColor: 'rgba(0, 255, 0, 0.1)',
+                                    data: #{managedBean.tempMeasured}
+                                }, {
+                                    type: "line",
+                                    label: "Výkon",
+                                    lineTension: 0,
+                                    borderColor: 'rgba(255, 0, 0, 1)',
+                                    backgroundColor: 'rgba(0, 0, 0, 0)',
+                                    data: #{managedBean.power}
+                                }]
+                        };
+                        var ctx = document.getElementById("myChart");
+                        var myLineChart = new Chart(ctx, {
+                            type: "bar",
+                            data: data,
+                            lineTension: 0,
+                            options: {
+                                scales: {
+                                    xAxes: [{
+                                            type: 'time',
+                                            time: {
+                                                tooltipFormat: 'HH:mm',
+                                                displayFormats: {
+                                                    'millisecond': 'HH:mm',
+                                                    'second': 'HH:mm:ss',
+                                                    'minute': 'HH:mm',
+                                                    'hour': 'HH:mm'
+                                                },
+                                            }
+                                        }]
+                                },
+                                animation: false,
+                                elements: {point: {radius: 0}}
+                            }
+                        });
 
-                    //debugger;
-                    data = {
-                        labels: #{managedBean.dates},
-                        datasets: [
-                            {
-                                type: 'line',
-                                label: "Naměřená teplota",
-                                lineTension: 0,
-                                borderColor: 'rgba(0, 255, 0, 1)',
-                                backgroundColor: 'rgba(0, 255, 0, 0.1)',
-                                data: #{managedBean.tempMeasured}
-                            }, {
-                                type: "line",
-                                label: "Výkon",
-                                lineTension: 0,
-                                borderColor: 'rgba(255, 0, 0, 1)',
-                                backgroundColor: 'rgba(0, 0, 0, 0)',
-                                data: #{managedBean.power}
-                            }]
-                    };
-                    var ctx = document.getElementById("myChart");
-                    var myLineChart = new Chart(ctx, {
-                        type: "bar",
-                        data: data,
-                        lineTension: 0,
-                        options: {
-                            scales: {
-                                xAxes: [{
-                                        type: 'time',
-                                        time: {
-                                            tooltipFormat: 'HH:mm',
-                                            displayFormats: {
-                                                'millisecond': 'HH:mm',
-                                                'second': 'HH:mm:ss',
-                                                'minute': 'HH:mm',
-                                                'hour': 'HH:mm'
-                                            },
-                                        }
-                                    }]
-                            },
-                            animation: false,
-                            elements: {point: {radius: 0}}
-                        }
-                    });
-
-                    if (canvas) {
-                        for (var key in canvas._elementRegistry._elements) {
-                            // skip loop if the property is from prototype
-                            if (!canvas._elementRegistry._elements.hasOwnProperty(key))
-                                continue;
-
-                            var obj = canvas._elementRegistry._elements[key];
-                            for (var prop in obj) {
+                        if (canvas) {
+                            for (var key in canvas._elementRegistry._elements) {
                                 // skip loop if the property is from prototype
-                                if (!obj.hasOwnProperty(prop))
+                                if (!canvas._elementRegistry._elements.hasOwnProperty(key))
                                     continue;
 
-                                canvas.removeMarker(key, 'highlight');
-                                
+                                var obj = canvas._elementRegistry._elements[key];
+                                for (var prop in obj) {
+                                    // skip loop if the property is from prototype
+                                    if (!obj.hasOwnProperty(prop))
+                                        continue;
+
+                                    canvas.removeMarker(key, 'highlight');
+
+                                }
                             }
+                            var ids = [#{diagramBean.elements}];
+                            ids.forEach(function (item) {
+                                canvas.addMarker(item, 'highlight');
+                            });
                         }
-                        var ids = [#{diagramBean.elements}];
-                        ids.forEach(function (item) {
-                            canvas.addMarker(item, 'highlight');
-                        });
-                    }
 
 
-                </script>
+                    </script>
+                </h:panelGroup>
 
             </h:form>
         </b:container>

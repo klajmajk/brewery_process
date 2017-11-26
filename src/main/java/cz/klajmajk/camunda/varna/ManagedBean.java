@@ -15,12 +15,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import javax.enterprise.context.RequestScoped;
 import javax.faces.view.ViewScoped;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
+import org.camunda.bpm.engine.HistoryService;
 import org.camunda.bpm.engine.RuntimeService;
 import org.camunda.bpm.engine.cdi.BusinessProcess;
 import org.camunda.bpm.engine.runtime.ActivityInstance;
@@ -47,22 +49,13 @@ public class ManagedBean implements Serializable {
 
     @Inject
     private RuntimeService runtimeService;
-
+    
     @Inject
+    private HistoryService historyService;
+
     private BusinessProcess businessProcess;
-
-    public String getCurrentTimeAgo() {
-        return timeAgo(sessionBean.getCurrent().getDate());
-    }
-
-    public String getStage(String pid) {
-        return sessionBean.getSubProcessStage(pid);
-    }
-
-    public String getStageStart(String pid) {
-        Date start = sessionBean.getStageStart(pid);
-        if (start != null) {
-            PeriodFormatter formatter = new PeriodFormatterBuilder().
+    
+    PeriodFormatter formatter = new PeriodFormatterBuilder().
                     printZeroAlways()
                     .appendHours().minimumPrintedDigits(2).appendSuffix(":")
                     .printZeroAlways()
@@ -71,11 +64,34 @@ public class ManagedBean implements Serializable {
                     .appendSeconds().minimumPrintedDigits(2)
                     .printZeroNever()
                     .toFormatter();
+    private boolean controllStir = true;
 
-            Period period = new Period(new Date().getTime() - sessionBean.getStageStart(pid).getTime());
+    public String getCurrentTimeAgo() {
+        return timeAgo(sessionBean.getCurrent().getDate());
+    }
+
+    public String getStage(String pid) {
+        return sessionBean.getSubProcessStage(pid);
+    }
+    
+    public void override(String pid){
+        sessionBean.setSubProcessVariable(pid, "override", true);
+    }
+    
+    public String getStageEnd(String pid) {
+        Date start = sessionBean.getStageStart(pid);
+        if (start != null) {
+            Long stageLength = ((Long) sessionBean.getSubProcessVariable(pid, "time")) * 60000;
+
+            Period period = new Period(sessionBean.getStageStart(pid).getTime() + stageLength - new Date().getTime());
             return formatter.print(period);
         }
         return "Neprobíhá";
+    }
+    
+    public String getProcessStart(String pid){
+        Period period = new Period(new Date().getTime() - historyService.createHistoricProcessInstanceQuery().processInstanceId(pid).singleResult().getStartTime().getTime());
+        return formatter.print(period);
     }
 
     public List<Object> getTempMeasuredList(List<Record> records) {
@@ -193,5 +209,29 @@ public class ManagedBean implements Serializable {
             return "";
         }
     }
+
+    public boolean isControllStir() {
+        return businessProcess.getVariable("controllStir");
+    }
+
+    public void setControllStir(boolean controllStir) {
+        runtimeService.setVariable(businessProcess.getProcessInstanceId(), "controllStir", controllStir);
+        //sset in subprocess
+        sessionBean.setSubProcessVariable(businessProcess.getProcessInstanceId(), "controllStir", controllStir);
+        //set in sub-subprocess
+        String stageProcessId = sessionBean.getSubprocessInstanceId(businessProcess.getProcessInstanceId());
+        sessionBean.setSubProcessVariable(stageProcessId, "controllStir", controllStir);
+    }
+
+    public BusinessProcess getBusinessProcess() {
+        return businessProcess;
+    }
+
+    public void setBusinessProcess(BusinessProcess businessProcess) {
+        this.businessProcess = businessProcess;
+    }
+    
+    
+    
 
 }
