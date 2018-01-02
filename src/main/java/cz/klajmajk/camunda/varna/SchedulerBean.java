@@ -7,11 +7,6 @@ package cz.klajmajk.camunda.varna;
 
 import cz.klajmajk.camunda.varna.entities.Record;
 import cz.klajmajk.camunda.varna.ws.VarnaRESTController;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import javax.ejb.Singleton;
 import javax.ejb.Startup;
@@ -50,6 +45,7 @@ public class SchedulerBean {
 
     public void init(String processInstanceId) {
         clear();
+        sessionBean.reset();
         System.out.println("Inniting timers");
         timerService.createTimer(1000, 1000, processInstanceId + ";" + REFRESH);
         timerService.createTimer(10000, 10000, processInstanceId + ";" + PERSIST);

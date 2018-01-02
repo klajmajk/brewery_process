@@ -40,6 +40,7 @@ public class VarnaRESTController implements Serializable {
             entries.add(new Entry("temp2", response.getJsonNumber("temp2").bigDecimalValue().floatValue()));
             entries.add(new Entry("power1", response.getJsonNumber("power1").intValue()));
             entries.add(new Entry("power2", response.getJsonNumber("power2").intValue()));
+            entries.add(new Entry("stir", response.getJsonNumber("stir").intValue()));
             return new Record(new Date(), entries);
         }catch (Exception e){
             Logger.getLogger(VarnaRESTController.class.getName()).log(Level.WARNING, e.getMessage());

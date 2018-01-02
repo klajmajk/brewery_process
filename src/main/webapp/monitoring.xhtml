@@ -44,6 +44,7 @@ and open the template in the editor.
                 var BpmnNavigatedViewer = window.BpmnJS;
                 var viewer = new BpmnNavigatedViewer({container: '#canvas'});
                 var canvas;
+                var loaded;
                 viewer.importXML(xml, function (err) {
 
                     if (!err) {
@@ -59,15 +60,28 @@ and open the template in the editor.
                         console.log('something went wrong:', err);
                     }
                 });
+
+                var highlight = function (ids) {
+                    var canvas = viewer.get('canvas');
+                    for (var property in canvas._elementRegistry._elements) {
+                        if (canvas._elementRegistry._elements.hasOwnProperty(property)) {
+                            canvas.removeMarker(property, 'highlight');
+                        }
+                    }
+                    if (loaded) {
+                        ids.forEach(function (item) {
+                            canvas.addMarker(item, 'highlight');
+                        });
+                    }
+                };
             </script>
 
 
-            <b:poll interval="3000" update="state"/>
             <h:form id="controll">
                 <b:row>
                     <b:column medium-screen="6">
                         <b:panelGrid columns="2" size="xs">
-                            <b:commandButton action="#{managedBean.override(businessProcess.processInstanceId)}" value="Override" disabled="#{managedBean.getStage(businessProcess.processInstanceId) eq 'hold'}" ajax="true" process="@this"/>
+                            <b:commandButton action="#{managedBean.override(businessProcess.processInstanceId)}" value="Override" disabled="#{managedBean.getStage(businessProcess.processInstanceId) eq 'hold'}" ajax="true" process="@this" update="controll"/>
                             <b:selectBooleanCheckbox  value="#{managedBean.controllStir}" caption="Řídit míchání">
                                 <f:ajax event="change" execute="@this" render="@none"/>
                             </b:selectBooleanCheckbox>
@@ -79,6 +93,10 @@ and open the template in the editor.
                 </b:row>
             </h:form>
             <h:form id="state">
+                <script>
+                    highlight([#{diagramBean.elements}]);
+                </script>
+                <b:poll interval="1000" update="state"/>
                 <b:panelGrid col-spans="6,6" id="info">
                     <h:panelGroup layout="block">
                         <h1>Aktuální stav</h1>
@@ -97,6 +115,9 @@ and open the template in the editor.
                             <h:outputText value="#{managedBean.getEntry('power1')} %"/> 
                             Poslední refresh: 
                             <h:outputText value="#{managedBean.currentTimeAgo}" style="font-weight:  bold; color: #{managedBean.currentTimeAgo eq 'teď' ? 'chartreuse' : 'red'}"/> 
+                            Míchání:
+                            <b:iconAwesome name="power-off" style="color: #{managedBean.getEntry('stir') eq 1 ? 'chartreuse' : 'red'}"/>
+                            
                         </b:panelGrid>
                     </h:panelGroup>
                     <h:panelGroup  layout="block">

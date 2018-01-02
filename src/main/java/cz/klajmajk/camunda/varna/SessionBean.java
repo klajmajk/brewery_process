@@ -38,6 +38,10 @@ public class SessionBean implements Serializable {
     public void init() {
         Logger.getLogger(SessionBean.class.getName()).log(Level.INFO, "New SessionBean");
     }
+    
+    public void reset(){
+        records = new ArrayList<Record>();
+    }
 
     public List<Record> getRecords() {
         if (records == null) {
